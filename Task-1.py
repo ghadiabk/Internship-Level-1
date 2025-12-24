@@ -1,28 +1,34 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import os
 
-base_url = "https://quotes.toscrape.com/page/"
-quotes_data = []
+os.makedirs("Level-1", exist_ok=True)
 
-for page in range(1, 6):
+base_url = "https://www.scrapethissite.com/pages/forms/?page_num="
+hockey_data = []
+
+for page in range(1, 4):
+    print(f"Scraping page {page}...")
     response = requests.get(base_url + str(page))
     soup = BeautifulSoup(response.text, "html.parser")
     
-    quotes = soup.find_all("div", class_="quote")
-    
-    for quote in quotes:
-        text = quote.find("span", class_="text").text
-        author = quote.find("small", class_="author").text
+    table = soup.find("table", class_="table")
+    rows = table.find_all("tr", class_="team")
 
-        tags = [tag.text for tag in quote.find_all("a", class_="tag")]
-        tags_str = ", ".join(tags)
+    for row in rows:
+        hockey_data.append({
+            "Team Name": row.find("td", class_="name").text.strip(),
+            "Year": row.find("td", class_="year").text.strip(),
+            "Wins": row.find("td", class_="wins").text.strip(),
+            "Losses": row.find("td", class_="losses").text.strip(),
+            "OT Losses": row.find("td", class_="ot-losses").text.strip(),
+            "Win %": row.find("td", class_="pct").text.strip(),
+            "GF": row.find("td", class_="gf").text.strip(),
+            "GA": row.find("td", class_="ga").text.strip(),
+            "Diff": row.find("td", class_="diff").text.strip()
+        })
 
-        quotes_data.append({
-            "Quote": text,
-            "Author": author,
-            "Tags": tags_str
-    })
-
-df = pd.DataFrame(quotes_data)
-df.to_csv("quotes.csv", index=False)
+df = pd.DataFrame(hockey_data)
+df.to_csv("Level-1/hockey_teams.csv", index=False)
+print(f"Successfully scraped {len(df)} records across 3 pages.")

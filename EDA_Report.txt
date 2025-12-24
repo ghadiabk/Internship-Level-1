@@ -1,0 +1,6 @@
+EDA INSIGHT REPORT
+==================
+Total teams analyzed: 75
+Average Wins: 36.15
+Highest Correlation: Wins vs Win % (1.00)
+Findings: Goals For (GF) shows a positive correlation with Wins, while Goals Against (GA) shows a negative impact.

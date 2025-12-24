@@ -1,51 +1,26 @@
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+import numpy as np
 
-df = pd.read_csv("quotes.csv")
+df = pd.read_csv("Level-1/hockey_teams.csv")
 
-print("Initial Dataset Info:")
-print(df.info())
-print("\nFirst 5 rows:")
-print(df.head())
+df = df.replace('', np.nan)
+df = df.fillna(method='ffill')
 
-print("\nMissing values before cleaning:")
-print(df.isnull().sum())
+num_cols = ['Wins', 'Losses', 'OT Losses', 'Win %', 'GF', 'GA', 'Diff']
+for col in num_cols:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
 
-df['Quote'] = df['Quote'].fillna("No Quote Available")
-df['Author'] = df['Author'].fillna("Unknown")
-df['Tags'] = df['Tags'].fillna("No Tags")
+Q1 = df['GF'].quantile(0.25)
+Q3 = df['GF'].quantile(0.75)
+IQR = Q3 - Q1
+df = df[~((df['GF'] < (Q1 - 1.5 * IQR)) | (df['GF'] > (Q3 + 1.5 * IQR)))]
 
-initial_rows = df.shape[0]
-df = df.drop_duplicates()
-final_rows = df.shape[0]
+le = LabelEncoder()
+df['Team_Code'] = le.fit_transform(df['Team Name'])
 
-print(f"\nDuplicates removed: {initial_rows - final_rows}")
+scaler = StandardScaler()
+df[['Wins_Scaled', 'GF_Scaled', 'GA_Scaled']] = scaler.fit_transform(df[['Wins', 'GF', 'GA']])
 
-df['Quote'] = df['Quote'].str.replace('“|”', '', regex=True)
-df['Quote'] = df['Quote'].str.strip()
-
-df['Author'] = df['Author'].str.strip()
-
-df['Tags'] = df['Tags'].str.lower()
-df['Tags'] = df['Tags'].str.replace(" ", "")
-df['Tags'] = df['Tags'].str.strip()
-
-df['Quote_clean'] = df['Quote'].str.lower()
-
-author_encoder = LabelEncoder()
-df['Author_encoded'] = author_encoder.fit_transform(df['Author'])
-
-df['Tags_list'] = df['Tags'].apply(lambda x: x.split(','))
-
-print("\nMissing values after cleaning:")
-print(df.isnull().sum())
-
-print("\nFinal Dataset Info:")
-print(df.info())
-
-print("\nFirst 5 rows of cleaned dataset:")
-print(df.head())
-
-df.to_csv("quotes_cleaned.csv", index=False)
-
-print("\nCleaned dataset saved as 'quotes_cleaned.csv'")
+df.to_csv("Level-1/hockey_cleaned.csv", index=False)
+print("Data cleaning, outlier removal, and standardization complete.")
