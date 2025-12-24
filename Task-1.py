@@ -12,10 +12,17 @@ for page in range(1, 6):
     quotes = soup.find_all("div", class_="quote")
     
     for quote in quotes:
+        text = quote.find("span", class_="text").text
+        author = quote.find("small", class_="author").text
+
+        tags = [tag.text for tag in quote.find_all("a", class_="tag")]
+        tags_str = ", ".join(tags)
+
         quotes_data.append({
-            "Quote": quote.find("span", class_="text").text,
-            "Author": quote.find("small", class_="author").text
-        })
+            "Quote": text,
+            "Author": author,
+            "Tags": tags_str
+    })
 
 df = pd.DataFrame(quotes_data)
 df.to_csv("quotes.csv", index=False)
